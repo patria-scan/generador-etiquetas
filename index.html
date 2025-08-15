@@ -81,7 +81,7 @@
             display: block;
         }
 
-        /* --- ESTILOS DE IMPRESIÓN (Estilo Cuadriculado de 2 Columnas) --- */
+        /* --- ESTILOS DE IMPRESIÓN (Versión Final) --- */
         @media print {
             body {
                 margin: 1cm;
@@ -91,24 +91,24 @@
                 display: none;
             }
             #output {
-                column-count: 2; /* Dos columnas */
+                column-count: 2;
                 column-gap: 0;
-                column-rule: 1px solid #aaa; /* Línea vertical central */
+                column-rule: 1px solid #000; /* Borde vertical NEGRO INTENSO */
             }
             .label {
                 box-shadow: none;
                 border-radius: 0;
                 width: auto;
                 break-inside: avoid;
-                border: 1px solid #aaa;
+                border: 1px solid #000; /* Borde de celda NEGRO INTENSO */
                 margin-top: -1px;
                 padding: 4px 8px;
+                justify-content: space-between; /* Alinear texto a la izquierda y QR a la derecha */
             }
             .label-text {
-                font-size: 11pt;
+                font-size: 12pt; /* LETRA UN POCO MÁS GRANDE */
                 font-weight: normal;
-                margin-right: auto;
-                white-space: nowrap; /* <-- ¡ESTA ES LA CORRECCIÓN! Evita que el texto se parta. */
+                white-space: nowrap;
             }
             .dp-control {
                 display: none;
