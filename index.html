@@ -81,7 +81,7 @@
             display: block;
         }
 
-        /* --- NUEVOS ESTILOS DE IMPRESIÓN (Estilo Cuadriculado de 2 Columnas) --- */
+        /* --- ESTILOS DE IMPRESIÓN (Estilo Cuadriculado de 2 Columnas) --- */
         @media print {
             body {
                 margin: 1cm;
@@ -107,10 +107,11 @@
             .label-text {
                 font-size: 11pt;
                 font-weight: normal;
-                margin-right: auto; /* Empuja el QR a la derecha */
+                margin-right: auto;
+                white-space: nowrap; /* <-- ¡ESTA ES LA CORRECCIÓN! Evita que el texto se parta. */
             }
             .dp-control {
-                display: none; /* Oculta la casilla "DP" al imprimir */
+                display: none;
             }
         }
     </style>
@@ -133,21 +134,16 @@
     <div id="output"></div>
 
     <script>
-        // Esta función se activa cada vez que se marca o desmarca una casilla "DP"
         function updateQrCode(event) {
             const checkbox = event.target;
             const isChecked = checkbox.checked;
-            // Obtenemos el valor ya calculado (XXXX - 1)
             const qrValue = checkbox.dataset.qrValue;
             const qrImg = checkbox.closest('.label').querySelector('.label-qr img');
-            
-            // Si está marcado, añade "#"; si no, usa el valor normal
             const qrText = isChecked ? `#${qrValue}` : qrValue;
             const encodedQrText = encodeURIComponent(qrText);
             qrImg.src = `https://bwipjs-api.metafloor.com/?bcid=datamatrix&text=${encodedQrText}`;
         }
 
-        // Esta función genera todas las etiquetas al presionar el botón
         function generateLabels() {
             const startNum = parseInt(document.getElementById('startNum').value);
             const endNum = parseInt(document.getElementById('endNum').value);
@@ -163,10 +159,7 @@
             for (let i = startNum; i <= endNum; i++) {
                 const fullId = `RECLAMACION-SD-${i}`;
                 const lastFourDigits = String(i).slice(-4);
-                
-                // --- ¡NUEVA LÓGICA! Se resta 1 al valor para el QR ---
                 const qrValue = parseInt(lastFourDigits, 10) - 1;
-
                 const initialQrUrl = `https://bwipjs-api.metafloor.com/?bcid=datamatrix&text=${qrValue}`;
                 
                 const labelDiv = document.createElement('div');
@@ -182,7 +175,6 @@
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
                 checkbox.id = `dp-check-${i}`;
-                // Guardamos el valor ya restado para usarlo después
                 checkbox.dataset.qrValue = qrValue;
 
                 const checkLabel = document.createElement('label');
