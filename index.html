@@ -105,7 +105,7 @@
                 padding: 4px 8px;
             }
             .label-text {
-                font-size: 14pt; /* <-- TAMAÑO FINAL 14pt */
+                font-size: 14pt;
                 font-weight: normal;
                 white-space: nowrap;
                 margin-right: 10px;
@@ -159,7 +159,10 @@
             for (let i = startNum; i <= endNum; i++) {
                 const fullId = `RECLAMACION-SD-${i}`;
                 const lastFourDigits = String(i).slice(-4);
-                const qrValue = parseInt(lastFourDigits, 10) - 1;
+
+                // --- ¡LÓGICA CAMBIADA! AHORA SUMA 1 ---
+                const qrValue = parseInt(lastFourDigits, 10) + 1;
+                
                 const initialQrUrl = `https://bwipjs-api.metafloor.com/?bcid=datamatrix&text=${qrValue}`;
                 
                 const labelDiv = document.createElement('div');
