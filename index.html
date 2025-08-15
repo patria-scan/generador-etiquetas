@@ -6,27 +6,30 @@
     <title>Generador de Etiquetas de Reclamación</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: Calibri, Arial, sans-serif;
             margin: 20px;
+            background-color: #f0f2f5;
         }
         .controls {
             padding: 20px;
-            border: 2px solid #ccc;
+            border: 1px solid #ccc;
             border-radius: 8px;
-            margin-bottom: 20px;
-            background-color: #f9f9f9;
+            margin-bottom: 25px;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .controls h1 {
             margin-top: 0;
+            font-size: 24px;
         }
         .controls label {
             font-weight: bold;
             margin-right: 10px;
         }
         .controls input[type="number"], .controls button {
-            padding: 8px;
+            padding: 8px 12px;
             font-size: 16px;
-            border-radius: 4px;
+            border-radius: 5px;
             border: 1px solid #ccc;
         }
         .controls button {
@@ -34,68 +37,80 @@
             color: white;
             cursor: pointer;
             margin-top: 15px;
+            border: none;
         }
         
-        /* --- ESTILOS EN PANTALLA --- */
+        /* Estilos para la vista en pantalla (interactiva) */
         #output {
             display: flex;
-            flex-direction: column; /* Una sola columna en la pantalla */
+            flex-direction: column;
+            gap: 8px; 
         }
         .label {
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            padding: 5px 0;
-            border-bottom: 1px solid #eee; /* Separador ligero en pantalla */
+            padding: 8px 12px;
+            border: 1px solid #b0b0b0;
+            border-radius: 6px;
+            background-color: #ffffff;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+            width: fit-content;
         }
         .label-text {
-            font-size: 14pt;
-            font-weight: bold;
-            min-width: 300px; /* Ancho fijo para alinear elementos */
+            font-size: 12pt;
+            white-space: nowrap;
+            margin-right: 16px;
         }
         .dp-control {
             display: flex;
             align-items: center;
-            margin-right: 20px;
+            margin-right: 16px;
         }
         .dp-control input {
-            margin-right: 5px;
+            margin-right: 6px;
             width: 16px;
             height: 16px;
         }
         .dp-control label {
             font-size: 10pt;
-            cursor: pointer;
+            color: #555;
         }
         .label-qr img {
-            width: 30px;  /* --- TAMAÑO DEL QR PEQUEÑO --- */
-            height: 30px; /* --- TAMAÑO DEL QR PEQUEÑO --- */
+            width: 32px;
+            height: 32px;
+            display: block;
         }
 
-        /* --- ESTILOS ESPECIALES PARA LA IMPRESIÓN --- */
+        /* --- NUEVOS ESTILOS DE IMPRESIÓN (Estilo Cuadriculado de 2 Columnas) --- */
         @media print {
             body {
-                margin: 1cm; /* Margen de la página */
+                margin: 1cm;
+                background-color: #fff;
             }
             .controls {
-                display: none; /* Oculta los controles */
+                display: none;
             }
             #output {
-                column-count: 4; /* --- DIVIDE EN 4 COLUMNAS --- */
-                column-gap: 15px; /* Espacio entre columnas */
-                flex-direction: initial; /* Resetea la dirección del flex */
+                column-count: 2; /* Dos columnas */
+                column-gap: 0;
+                column-rule: 1px solid #aaa; /* Línea vertical central */
             }
             .label {
-                break-inside: avoid; /* Evita que una etiqueta se corte entre columnas */
-                padding: 2px 0;
-                border-bottom: none; /* Sin separador en la impresión */
-            }
-            .dp-control {
-                display: none; /* Oculta la casilla "DP" */
+                box-shadow: none;
+                border-radius: 0;
+                width: auto;
+                break-inside: avoid;
+                border: 1px solid #aaa;
+                margin-top: -1px;
+                padding: 4px 8px;
             }
             .label-text {
-                font-size: 12pt; /* Letra un poco más pequeña para que quepa bien */
-                min-width: initial;
-                margin-right: 10px;
+                font-size: 11pt;
+                font-weight: normal;
+                margin-right: auto; /* Empuja el QR a la derecha */
+            }
+            .dp-control {
+                display: none; /* Oculta la casilla "DP" al imprimir */
             }
         }
     </style>
@@ -103,14 +118,14 @@
 <body>
 
     <div class="controls">
-        <h1>Generador de Etiquetas</h1>
+        <h1>Generador de Etiquetas para Expedientes</h1>
         <div>
             <label for="startNum">Desde RECLAMACION-SD-</label>
-            <input type="number" id="startNum" value="20251096">
+            <input type="number" id="startNum" value="20252450">
         </div>
         <div style="margin-top: 10px;">
             <label for="endNum">Hasta RECLAMACION-SD-</label>
-            <input type="number" id="endNum" value="20251150">
+            <input type="number" id="endNum" value="20252487">
         </div>
         <button onclick="generateLabels()">Generar Etiquetas</button>
     </div>
@@ -118,16 +133,21 @@
     <div id="output"></div>
 
     <script>
+        // Esta función se activa cada vez que se marca o desmarca una casilla "DP"
         function updateQrCode(event) {
             const checkbox = event.target;
             const isChecked = checkbox.checked;
-            const lastFourDigits = checkbox.dataset.lastFour;
+            // Obtenemos el valor ya calculado (XXXX - 1)
+            const qrValue = checkbox.dataset.qrValue;
             const qrImg = checkbox.closest('.label').querySelector('.label-qr img');
-            const qrText = isChecked ? `#${lastFourDigits}` : lastFourDigits;
+            
+            // Si está marcado, añade "#"; si no, usa el valor normal
+            const qrText = isChecked ? `#${qrValue}` : qrValue;
             const encodedQrText = encodeURIComponent(qrText);
             qrImg.src = `https://bwipjs-api.metafloor.com/?bcid=datamatrix&text=${encodedQrText}`;
         }
 
+        // Esta función genera todas las etiquetas al presionar el botón
         function generateLabels() {
             const startNum = parseInt(document.getElementById('startNum').value);
             const endNum = parseInt(document.getElementById('endNum').value);
@@ -143,7 +163,11 @@
             for (let i = startNum; i <= endNum; i++) {
                 const fullId = `RECLAMACION-SD-${i}`;
                 const lastFourDigits = String(i).slice(-4);
-                const initialQrUrl = `https://bwipjs-api.metafloor.com/?bcid=datamatrix&text=${lastFourDigits}`;
+                
+                // --- ¡NUEVA LÓGICA! Se resta 1 al valor para el QR ---
+                const qrValue = parseInt(lastFourDigits, 10) - 1;
+
+                const initialQrUrl = `https://bwipjs-api.metafloor.com/?bcid=datamatrix&text=${qrValue}`;
                 
                 const labelDiv = document.createElement('div');
                 labelDiv.className = 'label';
@@ -158,7 +182,8 @@
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
                 checkbox.id = `dp-check-${i}`;
-                checkbox.dataset.lastFour = lastFourDigits;
+                // Guardamos el valor ya restado para usarlo después
+                checkbox.dataset.qrValue = qrValue;
 
                 const checkLabel = document.createElement('label');
                 checkLabel.setAttribute('for', `dp-check-${i}`);
