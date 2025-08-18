@@ -49,21 +49,21 @@
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
-            align-items: flex-start; /* Alinea los elementos al inicio */
+            align-items: flex-start;
         }
 
         .label-wrapper {
             position: relative;
-            padding-top: 15px; /* Espacio arriba para el identificador */
+            padding-top: 15px;
         }
 
         .label-identifier {
             position: absolute;
             top: 0;
             left: 5px;
-            font-size: 8pt; /* Letra muy pequeña */
+            font-size: 8pt;
             font-weight: bold;
-            color: #555; /* Color gris oscuro */
+            color: #555;
         }
 
         .single-label {
@@ -108,11 +108,11 @@
         <h1>Generador de Etiquetas Múltiples</h1>
         <div>
             <label for="startNum">Desde RECLAMACION-SD-</label>
-            <input type="number" id="startNum" value="20252450">
+            <input type="number" id="startNum" value="20251869">
         </div>
         <div style="margin-top: 10px;">
             <label for="endNum">Hasta RECLAMACION-SD-</label>
-            <input type="number" id="endNum" value="20252452">
+            <input type="number" id="endNum" value="20251872">
         </div>
         <button onclick="generateLabels()">Generar Etiquetas</button>
     </div>
@@ -170,23 +170,26 @@
 
                 const fullId = `RECLAMACION-SD-${i}`;
                 
-                // --- ¡NUEVA LÓGICA PARA EL FORMATO DEL QR! ---
-                const fullNumberStr = String(i); // ej: "20252450"
-                const lastFourDigits = fullNumberStr.slice(-4); // ej: "2450"
-                const yearDigits = fullNumberStr.substring(2, 4); // ej: "25"
+                const fullNumberStr = String(i);
+                const lastFourDigits = fullNumberStr.slice(-4);
+                const yearDigits = fullNumberStr.substring(2, 4);
+                
+                const calculatedValue = parseInt(lastFourDigits, 10) + 1;
+                
+                const incrementedFour = String(calculatedValue).padStart(4, '0');
 
-                // 1. Crear etiqueta DPA/RC
-                const dpaQrContent = `${yearDigits}${lastFourDigits}`;
+                // Crear etiqueta DPA/RC
+                const dpaQrContent = `${yearDigits}${incrementedFour}`;
                 const dpaLabel = createLabel(fullId, dpaQrContent, 'DPA/RC');
                 rowDiv.appendChild(dpaLabel);
 
-                // 2. Crear etiqueta DP
-                const dpQrContent = `${yearDigits}#${lastFourDigits}`;
+                // Crear etiqueta DP
+                const dpQrContent = `${yearDigits}#${incrementedFour}`;
                 const dpLabel = createLabel(fullId, dpQrContent, 'DP');
                 rowDiv.appendChild(dpLabel);
                 
-                // 3. Crear etiqueta LEGAL
-                const legalQrContent = `${yearDigits}*${lastFourDigits}`;
+                // Crear etiqueta LEGAL
+                const legalQrContent = `${yearDigits}*${incrementedFour}`;
                 const legalLabel = createLabel(fullId, legalQrContent, 'LEGAL');
                 rowDiv.appendChild(legalLabel);
 
