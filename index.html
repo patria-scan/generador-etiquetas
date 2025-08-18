@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador de Etiquetas de Reclamación</title>
+    <title>Generador de Etiquetas Múltiples</title>
     <style>
         body {
             font-family: Calibri, Arial, sans-serif;
@@ -16,7 +16,6 @@
             border-radius: 8px;
             margin-bottom: 25px;
             background-color: #fff;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .controls h1 {
             margin-top: 0;
@@ -40,48 +39,55 @@
             border: none;
         }
         
-        /* Estilos para la vista en pantalla (interactiva) */
         #output {
             display: flex;
             flex-direction: column;
-            gap: 8px; 
+            gap: 10px; 
         }
-        .label {
-            display: inline-flex;
-            align-items: center;
-            padding: 8px 12px;
-            border: 1px solid #b0b0b0;
-            border-radius: 6px;
-            background-color: #ffffff;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.08);
-            width: fit-content;
+
+        .label-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: flex-start; /* Alinea los elementos al inicio */
         }
-        .label-text {
-            font-size: 12pt;
-            white-space: nowrap;
-            margin-right: 16px;
+
+        .label-wrapper {
+            position: relative;
+            padding-top: 15px; /* Espacio arriba para el identificador */
         }
-        .dp-control {
+
+        .label-identifier {
+            position: absolute;
+            top: 0;
+            left: 5px;
+            font-size: 8pt; /* Letra muy pequeña */
+            font-weight: bold;
+            color: #555; /* Color gris oscuro */
+        }
+
+        .single-label {
             display: flex;
             align-items: center;
-            margin-right: 16px;
+            padding: 6px 10px;
+            border: 1px solid #000;
+            border-radius: 5px;
+            background-color: #ffffff;
+            width: fit-content;
         }
-        .dp-control input {
-            margin-right: 6px;
-            width: 16px;
-            height: 16px;
+
+        .label-text {
+            font-size: 14pt;
+            white-space: nowrap;
+            margin-right: 10px;
         }
-        .dp-control label {
-            font-size: 10pt;
-            color: #555;
-        }
+
         .label-qr img {
             width: 32px;
             height: 32px;
             display: block;
         }
 
-        /* --- ESTILOS DE IMPRESIÓN (Versión Final) --- */
         @media print {
             body {
                 margin: 1cm;
@@ -90,28 +96,8 @@
             .controls {
                 display: none;
             }
-            #output {
-                column-count: 2;
-                column-gap: 0;
-                column-rule: 1px solid #000;
-            }
-            .label {
+            .single-label {
                 box-shadow: none;
-                border-radius: 0;
-                width: auto;
-                break-inside: avoid;
-                border: 1px solid #000;
-                margin-top: -1px;
-                padding: 4px 8px;
-            }
-            .label-text {
-                font-size: 14pt;
-                font-weight: normal;
-                white-space: nowrap;
-                margin-right: 10px;
-            }
-            .dp-control {
-                display: none;
             }
         }
     </style>
@@ -119,14 +105,14 @@
 <body>
 
     <div class="controls">
-        <h1>Generador de Etiquetas para Expedientes</h1>
+        <h1>Generador de Etiquetas Múltiples</h1>
         <div>
             <label for="startNum">Desde RECLAMACION-SD-</label>
             <input type="number" id="startNum" value="20252450">
         </div>
         <div style="margin-top: 10px;">
             <label for="endNum">Hasta RECLAMACION-SD-</label>
-            <input type="number" id="endNum" value="20252487">
+            <input type="number" id="endNum" value="20252452">
         </div>
         <button onclick="generateLabels()">Generar Etiquetas</button>
     </div>
@@ -134,14 +120,36 @@
     <div id="output"></div>
 
     <script>
-        function updateQrCode(event) {
-            const checkbox = event.target;
-            const isChecked = checkbox.checked;
-            const qrValue = checkbox.dataset.qrValue;
-            const qrImg = checkbox.closest('.label').querySelector('.label-qr img');
-            const qrText = isChecked ? `#${qrValue}` : qrValue;
-            const encodedQrText = encodeURIComponent(qrText);
-            qrImg.src = `https://bwipjs-api.metafloor.com/?bcid=datamatrix&text=${encodedQrText}`;
+        function createLabel(text, qrContent, identifier) {
+            const qrUrl = `https://bwipjs-api.metafloor.com/?bcid=datamatrix&text=${encodeURIComponent(qrContent)}`;
+            
+            const wrapperDiv = document.createElement('div');
+            wrapperDiv.className = 'label-wrapper';
+
+            const identifierSpan = document.createElement('span');
+            identifierSpan.className = 'label-identifier';
+            identifierSpan.textContent = identifier;
+
+            const labelDiv = document.createElement('div');
+            labelDiv.className = 'single-label';
+
+            const textSpan = document.createElement('span');
+            textSpan.className = 'label-text';
+            textSpan.textContent = text;
+
+            const qrDiv = document.createElement('div');
+            qrDiv.className = 'label-qr';
+            const qrImg = document.createElement('img');
+            qrImg.src = qrUrl;
+            qrDiv.appendChild(qrImg);
+
+            labelDiv.appendChild(textSpan);
+            labelDiv.appendChild(qrDiv);
+            
+            wrapperDiv.appendChild(identifierSpan);
+            wrapperDiv.appendChild(labelDiv);
+
+            return wrapperDiv;
         }
 
         function generateLabels() {
@@ -157,49 +165,32 @@
             outputDiv.innerHTML = ''; 
 
             for (let i = startNum; i <= endNum; i++) {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'label-row';
+
                 const fullId = `RECLAMACION-SD-${i}`;
-                const lastFourDigits = String(i).slice(-4);
-
-                // --- ¡LÓGICA CAMBIADA! AHORA SUMA 1 ---
-                const qrValue = parseInt(lastFourDigits, 10) + 1;
                 
-                const initialQrUrl = `https://bwipjs-api.metafloor.com/?bcid=datamatrix&text=${qrValue}`;
-                
-                const labelDiv = document.createElement('div');
-                labelDiv.className = 'label';
+                // --- ¡NUEVA LÓGICA PARA EL FORMATO DEL QR! ---
+                const fullNumberStr = String(i); // ej: "20252450"
+                const lastFourDigits = fullNumberStr.slice(-4); // ej: "2450"
+                const yearDigits = fullNumberStr.substring(2, 4); // ej: "25"
 
-                const textSpan = document.createElement('span');
-                textSpan.className = 'label-text';
-                textSpan.textContent = fullId;
+                // 1. Crear etiqueta DPA/RC
+                const dpaQrContent = `${yearDigits}${lastFourDigits}`;
+                const dpaLabel = createLabel(fullId, dpaQrContent, 'DPA/RC');
+                rowDiv.appendChild(dpaLabel);
 
-                const dpControlDiv = document.createElement('div');
-                dpControlDiv.className = 'dp-control';
+                // 2. Crear etiqueta DP
+                const dpQrContent = `${yearDigits}#${lastFourDigits}`;
+                const dpLabel = createLabel(fullId, dpQrContent, 'DP');
+                rowDiv.appendChild(dpLabel);
                 
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.id = `dp-check-${i}`;
-                checkbox.dataset.qrValue = qrValue;
+                // 3. Crear etiqueta LEGAL
+                const legalQrContent = `${yearDigits}*${lastFourDigits}`;
+                const legalLabel = createLabel(fullId, legalQrContent, 'LEGAL');
+                rowDiv.appendChild(legalLabel);
 
-                const checkLabel = document.createElement('label');
-                checkLabel.setAttribute('for', `dp-check-${i}`);
-                checkLabel.textContent = 'Es DP';
-                
-                checkbox.addEventListener('change', updateQrCode);
-                
-                dpControlDiv.appendChild(checkbox);
-                dpControlDiv.appendChild(checkLabel);
-
-                const qrDiv = document.createElement('div');
-                qrDiv.className = 'label-qr';
-                const qrImg = document.createElement('img');
-                qrImg.src = initialQrUrl;
-                qrDiv.appendChild(qrImg);
-
-                labelDiv.appendChild(textSpan);
-                labelDiv.appendChild(dpControlDiv);
-                labelDiv.appendChild(qrDiv);
-                
-                outputDiv.appendChild(labelDiv);
+                outputDiv.appendChild(rowDiv);
             }
         }
     </script>
